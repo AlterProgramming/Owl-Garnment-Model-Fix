@@ -304,4 +304,9 @@ def support_weights(verts, grid_index, grid_shape, pins, body_V, body_W,
         W = (1.0 - a)[:, None] * W + a[:, None] * Wnear
 
     W = R.smooth_grid_weights(W, grid_index, grid_shape, sigma=sigma, periodic=periodic)
+    # Smoothing must not leak wing support back into the actually pinned row;
+    # those vertices define the worn support loop and are validated separately.
+    top = row == 0
+    if top.any():
+        W[top] = Wp[col[top]]
     return W / np.maximum(W.sum(axis=1, keepdims=True), 1e-12)
