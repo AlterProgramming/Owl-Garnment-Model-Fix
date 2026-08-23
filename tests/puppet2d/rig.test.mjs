@@ -33,10 +33,12 @@ test('patterned cuffs inherit wing pivots instead of floating in body space', ()
   assert.equal(RIG.cuff_r.parent, 'wing_r');
   const a = snapshot('wave',0);
   const b = snapshot('wave',1.16);
-  const wingTravel = dist(origin(a.world.wing_l), transformPoint(b.world.wing_l,[0,120]));
-  const cuffTravel = dist(origin(a.world.cuff_l), origin(b.world.cuff_l));
-  assert.ok(cuffTravel > 80, `left cuff should travel with waving wing, got ${cuffTravel}`);
-  assert.ok(wingTravel > 80, `wave must produce meaningful wing motion, got ${wingTravel}`);
+  // The cuff pivot itself is intentionally close to the shoulder, so measure a
+  // visible point on the cuff instead of demanding large travel at the pivot.
+  const cuffTravel = dist(transformPoint(a.world.cuff_l,[0,60]), transformPoint(b.world.cuff_l,[0,60]));
+  const wingTipTravel = dist(transformPoint(a.world.wing_l,[0,180]), transformPoint(b.world.wing_l,[0,180]));
+  assert.ok(cuffTravel > 80, `visible left cuff should travel with waving wing, got ${cuffTravel}`);
+  assert.ok(wingTipTravel > 180, `wave must produce meaningful wing-tip motion, got ${wingTipTravel}`);
 });
 
 test('non-loop actions settle back into their authored rest pose', () => {
