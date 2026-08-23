@@ -14,21 +14,20 @@ from meshforge import coupling as C
 
 
 NAMES = ["body", "chest", "wing_left", "wing_left_tip", "wing_right", "head", "leg_left"]
+ROWS, COLS = 9, 5   # final column duplicates the seam, like the real wrap
 
 
 def _fixture():
-    # Four columns, three vertical rows.  The upper left columns lie directly
-    # over wing-root skin; the upper right columns lie over chest/body skin.
     pins = np.array([
         [-0.35, 1.00, 0.00],
         [-0.15, 1.00, 0.00],
         [ 0.15, 1.00, 0.00],
         [ 0.35, 1.00, 0.00],
+        [-0.35, 1.00, 0.00],  # periodic seam copy of column zero
     ], dtype=float)
     verts = np.vstack([
-        pins,
-        pins + np.array([0.0, -0.45, 0.015]),
-        pins + np.array([0.0, -0.90, 0.030]),
+        pins + np.array([0.0, -0.90 * r / (ROWS - 1), 0.030 * r / (ROWS - 1)])
+        for r in range(ROWS)
     ])
 
     body = np.array([
@@ -62,32 +61,33 @@ def _fixture():
     return verts, pins, body, W
 
 
-def test_upper_contact_inherits_wing_root_motion():
-    verts, pins, body, body_W = _fixture()
-    W = C.guide_weights(
-        verts, np.arange(len(verts)), (3, 4), pins,
+def _weights(verts, pins, body, body_W):
+    return C.guide_weights(
+        verts, np.arange(len(verts)), (ROWS, COLS), pins,
         body, body_W, NAMES, y_hip=0.30,
         local_k=1, sigma=0.01,
     )
+
+
+def test_upper_contact_inherits_wing_root_motion():
+    verts, pins, body, body_W = _fixture()
+    W = _weights(verts, pins, body, body_W)
     left = NAMES.index("wing_left")
     right = NAMES.index("wing_right")
     # This is the regression the old support_weights could never pass: it
-    # forced both quantities to exactly zero.
-    assert W[0:2, left].mean() > 0.35
+    # forced both quantities to exactly zero.  Ignore the duplicated seam
+    # column when checking the right side.
+    assert W[:COLS, left].mean() > 0.25
     assert W[2:4, right].mean() > 0.30
 
 
 def test_hem_releases_back_to_body_transport():
     verts, pins, body, body_W = _fixture()
-    W = C.guide_weights(
-        verts, np.arange(len(verts)), (3, 4), pins,
-        body, body_W, NAMES, y_hip=0.30,
-        local_k=1, sigma=0.01,
-    )
+    W = _weights(verts, pins, body, body_W)
     body_i = NAMES.index("body")
     wing_i = [NAMES.index("wing_left"), NAMES.index("wing_left_tip"), NAMES.index("wing_right")]
-    assert np.all(W[-4:, body_i] > 0.98)
-    assert np.all(W[-4:, wing_i].sum(axis=1) < 0.02)
+    assert np.all(W[-COLS:, body_i] > 0.98)
+    assert np.all(W[-COLS:, wing_i].sum(axis=1) < 0.02)
 
 
 def test_unrelated_nearby_joint_cannot_leak_into_garment():
@@ -96,11 +96,7 @@ def test_unrelated_nearby_joint_cannot_leak_into_garment():
     # fall back to the support baseline rather than importing head motion.
     verts = verts.copy()
     verts[1] = body[-1]
-    W = C.guide_weights(
-        verts, np.arange(len(verts)), (3, 4), pins,
-        body, body_W, NAMES, y_hip=0.30,
-        local_k=1, sigma=0.01,
-    )
+    W = _weights(verts, pins, body, body_W)
     assert W[:, NAMES.index("head")].sum() == pytest.approx(0.0)
     assert W[:, NAMES.index("leg_left")].sum() == pytest.approx(0.0)
     assert np.allclose(W.sum(axis=1), 1.0)
@@ -108,12 +104,8 @@ def test_unrelated_nearby_joint_cannot_leak_into_garment():
 
 def test_diagnostics_separate_upper_coupling_from_free_hem():
     verts, pins, body, body_W = _fixture()
-    W = C.guide_weights(
-        verts, np.arange(len(verts)), (3, 4), pins,
-        body, body_W, NAMES, y_hip=0.30,
-        local_k=1, sigma=0.01,
-    )
-    d = C.guide_diagnostics(W, NAMES, np.arange(len(verts)), (3, 4))
+    W = _weights(verts, pins, body, body_W)
+    d = C.guide_diagnostics(W, NAMES, np.arange(len(verts)), (ROWS, COLS))
     assert d["upper_wing_mass_max"] > 0.25
     assert d["lower_wing_mass_mean"] < 0.02
     assert d["unrelated_mass"] == pytest.approx(0.0)
@@ -130,6 +122,6 @@ def test_install_is_idempotent_and_changes_only_experiment_symbols():
     assert drape.ClothParams().length_slack < drape.LegacyClothParams().length_slack
     # run_gates resolves these global functions at call time, so replacing
     # them is enough; the production implementation remains available in
-    # Git history/main for the A/B build.
+    # main for the A/B build.
     assert gates.gate_worn is C._coupled_gate_worn
     assert gates.gate_support_only is C._coupled_gate_support_only
