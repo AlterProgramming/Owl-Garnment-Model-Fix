@@ -11,7 +11,7 @@ on:
       - ".github/workflows/cloth-exec-render.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   render:
@@ -19,6 +19,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: agent/contact-driven-cloth-exec
 
       - uses: actions/setup-python@v5
         with:
@@ -67,14 +69,25 @@ jobs:
             --view front:0:0 \
             --view front34:-28:2
 
+      - name: Publish branch render
+        run: |
+          rm -rf exec-output
+          mkdir -p exec-output
+          cp build/exec/owl-shoulder-cloth.glb exec-output/
+          cp build/exec/owl-shoulder-cloth.report.json exec-output/
+          cp shots/exec/*.png exec-output/
+          cp shots/exec/*.json exec-output/ || true
+          cp shots/exec/*.txt exec-output/ || true
+          git config user.name "cloth-exec-bot"
+          git config user.email "cloth-exec-bot@users.noreply.github.com"
+          git add exec-output
+          git diff --cached --quiet && exit 0
+          git commit -m "Render shoulder cloth execution [skip ci]"
+          git push origin HEAD:agent/contact-driven-cloth-exec
+
       - name: Upload executable evidence
         uses: actions/upload-artifact@v4
         with:
           name: cloth-exec-render
           if-no-files-found: error
-          path: |
-            build/exec/owl-shoulder-cloth.glb
-            build/exec/owl-shoulder-cloth.report.json
-            shots/exec/*.png
-            shots/exec/*.json
-            shots/exec/*.txt
+          path: exec-output/
