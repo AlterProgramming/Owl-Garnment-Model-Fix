@@ -1,11 +1,23 @@
 """Regression tests for the animation-coupled wrap baseline.
 
-These tests deliberately avoid beauty-render assertions.  They encode the
+These tests deliberately avoid beauty-render assertions. They encode the
 mechanical contract the previous wrap violated: upper cloth next to a moving
 wing root must inherit some of that root's animation, unrelated joints must
 never leak in, and the hem must still release back to body transport.
 """
 from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+# The repository also has ``tests/meshforge`` as a test package. Pytest puts
+# ``tests`` on sys.path while collecting, so an unqualified import can resolve
+# that helper package instead of the production package. Pin the repository
+# root first; this test is specifically about production ``meshforge``.
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+if "meshforge" in sys.modules and Path(getattr(sys.modules["meshforge"], "__file__", "")).parent.name == "meshforge" and "tests" in str(getattr(sys.modules["meshforge"], "__file__", "")):
+    del sys.modules["meshforge"]
 
 import numpy as np
 import pytest
@@ -23,27 +35,20 @@ def _fixture():
         [-0.15, 1.00, 0.00],
         [ 0.15, 1.00, 0.00],
         [ 0.35, 1.00, 0.00],
-        [-0.35, 1.00, 0.00],  # periodic seam copy of column zero
+        [-0.35, 1.00, 0.00],
     ], dtype=float)
     verts = np.vstack([
         pins + np.array([0.0, -0.90 * r / (ROWS - 1), 0.030 * r / (ROWS - 1)])
         for r in range(ROWS)
     ])
-
     body = np.array([
-        [-0.35, 1.00, 0.00],
-        [-0.15, 1.00, 0.00],
-        [ 0.15, 1.00, 0.00],
-        [ 0.35, 1.00, 0.00],
-        [-0.35, 0.55, 0.00],
-        [-0.15, 0.55, 0.00],
-        [ 0.15, 0.55, 0.00],
-        [ 0.35, 0.55, 0.00],
-        [-0.35, 0.10, 0.00],
-        [-0.15, 0.10, 0.00],
-        [ 0.15, 0.10, 0.00],
-        [ 0.35, 0.10, 0.00],
-        [ 0.00, 1.05, 0.01],   # deliberately nearby head-only sample
+        [-0.35, 1.00, 0.00], [-0.15, 1.00, 0.00],
+        [ 0.15, 1.00, 0.00], [ 0.35, 1.00, 0.00],
+        [-0.35, 0.55, 0.00], [-0.15, 0.55, 0.00],
+        [ 0.15, 0.55, 0.00], [ 0.35, 0.55, 0.00],
+        [-0.35, 0.10, 0.00], [-0.15, 0.10, 0.00],
+        [ 0.15, 0.10, 0.00], [ 0.35, 0.10, 0.00],
+        [ 0.00, 1.05, 0.01],
     ], dtype=float)
     W = np.zeros((len(body), len(NAMES)), dtype=float)
     W[0:2, NAMES.index("wing_left")] = 0.72
@@ -68,10 +73,8 @@ def _weights(verts, pins, body, body_W):
 def test_upper_contact_inherits_wing_root_motion():
     verts, pins, body, body_W = _fixture()
     W = _weights(verts, pins, body, body_W)
-    left = NAMES.index("wing_left")
-    right = NAMES.index("wing_right")
-    assert W[:COLS, left].mean() > 0.25
-    assert W[2:4, right].mean() > 0.30
+    assert W[:COLS, NAMES.index("wing_left")].mean() > 0.25
+    assert W[2:4, NAMES.index("wing_right")].mean() > 0.30
 
 
 def test_hem_releases_back_to_body_transport():
@@ -104,7 +107,6 @@ def test_diagnostics_separate_upper_coupling_from_free_hem():
 
 def test_install_is_idempotent_and_changes_only_experiment_symbols():
     from meshforge import drape, gates, wrap
-
     C.install()
     first = wrap.support_weights
     C.install()
