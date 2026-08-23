@@ -7,6 +7,7 @@ on:
       - "meshforge/owl_pipeline_coupled.py"
       - "tests/meshforge/test_coupling.py"
       - "tools/wrap_coupling_diag.py"
+      - "tools/wrap_motion_sheet.py"
       - ".github/workflows/coupled-garment-tests.yml"
   workflow_dispatch:
 
@@ -24,4 +25,48 @@ jobs:
       - name: Run coupling regression tests
         run: PYTHONPATH=. python -m pytest tests/meshforge/test_coupling.py -q
       - name: Compile experiment entry points
-        run: python -m py_compile meshforge/coupling.py meshforge/owl_pipeline_coupled.py tools/wrap_coupling_diag.py
+        run: python -m py_compile meshforge/coupling.py meshforge/owl_pipeline_coupled.py tools/wrap_coupling_diag.py tools/wrap_motion_sheet.py
+
+  build-coupled-guide:
+    needs: coupling-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install build dependencies
+        run: python -m pip install --upgrade pip numpy scipy trimesh pygltflib pillow xatlas
+      - name: Build coupled kiosk guide
+        run: |
+          PYTHONPATH=. python -m meshforge.owl_pipeline_coupled \
+            --hires "assets/AI-CCORE Owl.glb" \
+            --out build/owl-guide-kente-coupled.glb \
+            --cache .owl_cache-coupled \
+            --faces 14000 --tex 512 --samples 1200000 \
+            --jpeg-quality 82 --eye-subdiv 2 --decal-height 256 \
+            --kente --kente-style wrap --beads
+      - name: Measure shell coupling A/B
+        run: |
+          mkdir -p probes/coupling-ci
+          PYTHONPATH=. python tools/wrap_coupling_diag.py build/owl-guide-kente-wrap.glb \
+            --out probes/coupling-ci/control.json
+          PYTHONPATH=. python tools/wrap_coupling_diag.py build/owl-guide-kente-coupled.glb \
+            --out probes/coupling-ci/coupled.json
+      - name: Render gray A/B motion sheets
+        run: |
+          PYTHONPATH=. python tools/wrap_motion_sheet.py \
+            --control build/owl-guide-kente-wrap.glb \
+            --candidate build/owl-guide-kente-coupled.glb \
+            --out renders/coupling-ci
+      - name: Upload coupled guide evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: coupled-guide-evidence
+          path: |
+            build/owl-guide-kente-coupled.glb
+            build/owl-guide-kente-coupled.report.json
+            probes/coupling-ci/*.json
+            renders/coupling-ci/*.png
+          if-no-files-found: error
