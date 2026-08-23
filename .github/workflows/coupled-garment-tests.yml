@@ -23,7 +23,7 @@ jobs:
       - name: Install test dependencies
         run: python -m pip install --upgrade pip pytest numpy scipy trimesh pygltflib pillow
       - name: Run coupling regression tests
-        run: PYTHONPATH=. python -m pytest tests/meshforge/test_coupling.py -q
+        run: PYTHONPATH="$PWD" python -m pytest tests/meshforge/test_coupling.py -q --import-mode=importlib
       - name: Compile experiment entry points
         run: python -m py_compile meshforge/coupling.py meshforge/owl_pipeline_coupled.py tools/wrap_coupling_diag.py tools/wrap_motion_sheet.py
 
@@ -40,7 +40,7 @@ jobs:
         run: python -m pip install --upgrade pip numpy scipy trimesh pygltflib pillow xatlas
       - name: Build coupled kiosk guide
         run: |
-          PYTHONPATH=. python -m meshforge.owl_pipeline_coupled \
+          PYTHONPATH="$PWD" python -m meshforge.owl_pipeline_coupled \
             --hires "assets/AI-CCORE Owl.glb" \
             --out build/owl-guide-kente-coupled.glb \
             --cache .owl_cache-coupled \
@@ -50,13 +50,13 @@ jobs:
       - name: Measure shell coupling A/B
         run: |
           mkdir -p probes/coupling-ci
-          PYTHONPATH=. python tools/wrap_coupling_diag.py build/owl-guide-kente-wrap.glb \
+          PYTHONPATH="$PWD" python tools/wrap_coupling_diag.py build/owl-guide-kente-wrap.glb \
             --out probes/coupling-ci/control.json
-          PYTHONPATH=. python tools/wrap_coupling_diag.py build/owl-guide-kente-coupled.glb \
+          PYTHONPATH="$PWD" python tools/wrap_coupling_diag.py build/owl-guide-kente-coupled.glb \
             --out probes/coupling-ci/coupled.json
       - name: Render gray A/B motion sheets
         run: |
-          PYTHONPATH=. python tools/wrap_motion_sheet.py \
+          PYTHONPATH="$PWD" python tools/wrap_motion_sheet.py \
             --control build/owl-guide-kente-wrap.glb \
             --candidate build/owl-guide-kente-coupled.glb \
             --out renders/coupling-ci
