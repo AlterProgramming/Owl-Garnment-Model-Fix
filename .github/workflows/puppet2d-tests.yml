@@ -1,0 +1,50 @@
+name: 2D owl puppet
+
+on:
+  pull_request:
+    paths:
+      - "puppet2d/**"
+      - "tests/puppet2d/**"
+      - "tools/validate_puppet2d.mjs"
+      - "tools/render_puppet2d.py"
+      - ".github/workflows/puppet2d-tests.yml"
+  workflow_dispatch:
+
+jobs:
+  rig-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run skeletal regression tests
+        run: node --test tests/puppet2d/rig.test.mjs
+      - name: Run dense attachment diagnostics
+        run: node tools/validate_puppet2d.mjs | tee puppet2d-validation.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: puppet2d-validation
+          path: puppet2d-validation.json
+
+  runtime-render:
+    needs: rig-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install renderer
+        run: |
+          python -m pip install --upgrade pip playwright pillow
+          python -m playwright install --with-deps chromium
+      - name: Capture real browser animation poses
+        run: python tools/render_puppet2d.py --out renders/puppet2d
+      - uses: actions/upload-artifact@v4
+        with:
+          name: puppet2d-runtime-evidence
+          path: renders/puppet2d/*.png
+          if-no-files-found: error
