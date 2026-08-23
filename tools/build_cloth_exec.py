@@ -5,6 +5,8 @@ from __future__ import annotations
 import dataclasses
 import sys
 
+import numpy as np
+
 
 def _concept_args(argv):
     out = list(argv)
@@ -39,15 +41,16 @@ def main(argv=None) -> int:
     D.drape = S.drape
     W.support_weights = E.support_weights
 
-    # The reference is bilateral.  The production pipeline used a single
-    # measured sleeve as the obstacle and therefore protected only that
-    # shoulder cap.  Mirror pattern-space opening evidence so both shoulders
-    # keep the same yoke coverage and armhole depth.
     OriginalOpeningMask = D.opening_mask
 
     def ExecOpeningMask(P, pattern, points, params, du=0.0, dv=0.0):
         mask = OriginalOpeningMask(P, pattern, points, params, du=du, dv=dv)
-        return B.symmetric_opening_mask(mask, pattern.theta_cols)
+        mirrored = B.symmetric_opening_mask(mask, pattern.theta_cols)
+        row_v = np.asarray(pattern.v[:, 0], dtype=np.float64)
+        shoulder_rows = row_v <= float(params.shoulder_keep + params.open_margin)
+        out = mask.copy()
+        out[shoulder_rows] = mirrored[shoulder_rows]
+        return out
 
     D.opening_mask = ExecOpeningMask
 
@@ -121,9 +124,6 @@ def main(argv=None) -> int:
 
     from meshforge import owl_pipeline
 
-    # The legacy pipeline only emits the measured left sleeve.  Add its
-    # geometric and skinning mirror at the export boundary after the tunic
-    # has already received a matching right armhole/shoulder cap.
     OriginalWriteGLB = owl_pipeline.write_rigged_glb
 
     def ExecWriteGLB(primitives, joints, animations, *args, **kwargs):
