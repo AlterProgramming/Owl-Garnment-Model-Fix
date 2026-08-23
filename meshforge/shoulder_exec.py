@@ -12,21 +12,53 @@ def _smoothstep(x):
     return x * x * (3.0 - 2.0 * x)
 
 
-def _radius_profile(body, theta: float) -> np.ndarray:
-    return np.asarray([
-        np.interp(theta, body.theta, np.asarray(row, dtype=np.float64), period=2.0 * np.pi)
-        for row in np.asarray(body.wrap_r)
+def _radius_profile(body, theta: float, field: str) -> np.ndarray:
+    A = np.asarray(getattr(body, field), dtype=np.float64)
+    out = np.asarray([
+        np.interp(theta, body.theta, row, period=2.0 * np.pi)
+        for row in A
     ], dtype=np.float64)
+    bad = ~np.isfinite(out) | (out <= 0.0)
+    if bad.any() and field != "envelope":
+        fallback = _radius_profile(body, theta, "envelope")
+        out[bad] = fallback[bad]
+        bad = ~np.isfinite(out) | (out <= 0.0)
+    if bad.any():
+        good = ~bad
+        if good.any():
+            out[bad] = np.interp(np.flatnonzero(bad), np.flatnonzero(good), out[good])
+        else:
+            out[:] = float(np.nanmedian(np.asarray(body.neck_r, dtype=np.float64)))
+    return out
 
 
-def initial_positions(pattern, body, flare_deg: float = 10.0) -> np.ndarray:
-    """Seed the garment on the upper support surface before letting it hang.
+def _surface_radius(body, theta: float, y: np.ndarray, top_y: float, top_r: float) -> np.ndarray:
+    H = float(body.size_y)
+    ygrid = np.asarray(body.y, dtype=np.float64)
+    torso = np.interp(y, ygrid, _radius_profile(body, theta, "envelope"))
+    wrapped = np.interp(y, ygrid, _radius_profile(body, theta, "wrap_r"))
 
-    The original cone seed leaves the upper cloth outside the shoulder and
-    asks gravity/collision to discover a shoulder later.  This seed instead
-    walks along the measured body surface for the yoke distance, then turns
-    into a hanging panel.  The first rows therefore begin as worn cloth, not
-    as a lampshade around the character.
+    # Only retain the wing/root bulge close to the shoulder.  Following the
+    # entire wrap envelope is what created the old box/shell silhouette.
+    root_depth = np.clip((top_y - y) / max(0.22 * H, 1e-9), 0.0, 1.0)
+    root_gate = 1.0 - _smoothstep(root_depth)
+    bulge = np.clip(wrapped - torso, 0.0, 0.095 * H)
+    r = torso + root_gate * bulge
+
+    # A real shoulder may move outward quickly, but it should be allowed to
+    # taper back toward the torso as it descends.
+    inward_allow = 0.085 * H * _smoothstep(root_depth)
+    r = np.maximum(r, top_r - inward_allow)
+    return r
+
+
+def initial_positions(pattern, body, flare_deg: float = -2.5) -> np.ndarray:
+    """Draft a shoulder-supported tunic seed.
+
+    The upper chart follows the measured neck/shoulder/root surface.  Only
+    after crossing that support does it become a hanging panel, so the solver
+    begins with a shoulder line instead of trying to discover one from a
+    cylindrical shell by collision.
     """
     rows, cols = pattern.grid_shape
     if pattern.theta_cols is not None:
@@ -40,32 +72,23 @@ def initial_positions(pattern, body, flare_deg: float = 10.0) -> np.ndarray:
     axis = np.asarray(body.axis_xz, dtype=np.float64)
     P = np.zeros((rows, cols, 3), dtype=np.float64)
 
-    # Long enough to cross the shoulder/wing-root bulge, but not so long that
-    # the authored guide dictates the belly and hem silhouette.
-    support_target = max(0.11 * H, 0.18 * float(pattern.length))
-    flare = np.radians(float(flare_deg))
-    hang_dir_y = -np.cos(flare)
-    hang_dir_r = np.sin(flare)
+    support_target = max(0.15 * H, 0.23 * float(pattern.length))
+    hang_radial_slope = np.tan(np.radians(float(flare_deg)))
 
     for c in range(cols):
-        y1 = max(float(body.y_hem), float(top_y[c] - 0.25 * H))
-        yy = np.linspace(float(top_y[c]), y1, 112)
-        rp = _radius_profile(body, float(theta[c]))
-        rr = np.interp(yy, np.asarray(body.y, dtype=np.float64), rp)
+        y1 = max(float(body.y_hem), float(top_y[c] - 0.32 * H))
+        yy = np.linspace(float(top_y[c]), y1, 160)
+        rr = _surface_radius(body, float(theta[c]), yy, float(top_y[c]), float(top_r[c]))
 
-        # Never cut inward immediately under the support loop.  The small
-        # stand-off ramps in after the neckline so the top edge itself still
-        # matches the measured collar/support ring.
-        rr = np.maximum(rr, float(top_r[c]))
-        ramp = _smoothstep(np.linspace(0.0, 1.0, len(rr)))
-        rr = rr + (0.006 * H) * ramp
+        shoulder_progress = _smoothstep((float(top_y[c]) - yy) / max(0.18 * H, 1e-9))
+        rr += (0.008 * H) * shoulder_progress
         rr[0] = float(top_r[c])
 
         seg = np.hypot(np.diff(yy), np.diff(rr))
         arc = np.concatenate([[0.0], np.cumsum(seg)])
         support_len = min(float(arc[-1]), support_target)
         if support_len <= 1e-8:
-            support_len = min(float(pattern.length), 0.08 * H)
+            support_len = min(float(pattern.length), 0.10 * H)
 
         y_end = float(np.interp(support_len, arc, yy))
         r_end = float(np.interp(support_len, arc, rr))
@@ -79,14 +102,17 @@ def initial_positions(pattern, body, flare_deg: float = 10.0) -> np.ndarray:
             r[on] = np.interp(vv[on], arc, rr)
         if np.any(~on):
             extra = vv[~on] - support_len
-            y[~on] = y_end + hang_dir_y * extra
-            r[~on] = r_end + hang_dir_r * extra
+            y[~on] = y_end - extra
+            raw = r_end + hang_radial_slope * extra
+            # The hanging panel may taper, but never seed inside the torso.
+            floor = np.interp(y[~on], np.asarray(body.y, dtype=np.float64),
+                              _radius_profile(body, float(theta[c]), "envelope")) + 0.022 * H
+            r[~on] = np.maximum(raw, floor)
 
         P[:, c, 0] = axis[0] + r * np.sin(theta[c])
         P[:, c, 1] = y
         P[:, c, 2] = axis[1] + r * np.cos(theta[c])
 
-    # The last chart column is the seam copy of column zero.
     if cols > 1 and np.isclose(float(pattern.phi[0, -1] - pattern.phi[0, 0]), 1.0, atol=1e-5):
         P[:, -1] = P[:, 0]
     return P.reshape(rows * cols, 3)
@@ -114,12 +140,11 @@ def drape(P, pattern, sets, colliders, pinned, keep, params, offset=None,
     guide[seam_dup] = guide[seam_src]
 
     vnorm = np.asarray(pattern.v, dtype=np.float64).ravel() / max(float(pattern.length), 1e-9)
-    # Upper quarter: authored support.  The influence is strongest directly
-    # under the tie/collar and dies before the loose body of the garment.
-    yoke_t = np.clip(vnorm / 0.24, 0.0, 1.0)
+    yoke_t = np.clip(vnorm / 0.34, 0.0, 1.0)
     yoke_w = 1.0 - _smoothstep(yoke_t)
-    yoke_gain = 0.34 * yoke_w
-    yoke_cap = 0.010 + 0.050 * yoke_t
+    yoke_gain = 0.56 * yoke_w
+    scale = max(float(pattern.length), 1e-6)
+    yoke_cap = scale * (0.018 + 0.095 * yoke_t)
     yoke_live = free & (yoke_w > 1e-4)
 
     self_radius = float(params.self_collide)
@@ -201,6 +226,6 @@ def drape(P, pattern, sets, colliders, pinned, keep, params, offset=None,
         "contacts": int(contacts_total),
         "self_collision_radius": round(float(self_radius), 6),
         "self_pairs": int(self_pairs_total),
-        "solver": "shoulder-contact-exec-v2",
-        "yoke_fraction": 0.24,
+        "solver": "shoulder-contact-exec-v3",
+        "yoke_fraction": 0.34,
     }
