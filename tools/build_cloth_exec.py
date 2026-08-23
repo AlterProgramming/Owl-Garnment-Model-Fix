@@ -26,6 +26,7 @@ def main(argv=None) -> int:
     argv = [a for a in argv if a != "--exec-keep-swept-shell"]
     argv = _concept_args(argv)
 
+    from meshforge import bilateral_exec as B
     from meshforge import cloth_exec as E
     from meshforge import drape as D
     from meshforge import gates as G
@@ -37,6 +38,18 @@ def main(argv=None) -> int:
     D.initial_positions = S.initial_positions
     D.drape = S.drape
     W.support_weights = E.support_weights
+
+    # The reference is bilateral.  The production pipeline used a single
+    # measured sleeve as the obstacle and therefore protected only that
+    # shoulder cap.  Mirror pattern-space opening evidence so both shoulders
+    # keep the same yoke coverage and armhole depth.
+    OriginalOpeningMask = D.opening_mask
+
+    def ExecOpeningMask(P, pattern, points, params, du=0.0, dv=0.0):
+        mask = OriginalOpeningMask(P, pattern, points, params, du=du, dv=dv)
+        return B.symmetric_opening_mask(mask, pattern.theta_cols)
+
+    D.opening_mask = ExecOpeningMask
 
     OriginalClothParams = D.ClothParams
 
@@ -108,7 +121,18 @@ def main(argv=None) -> int:
 
     from meshforge import owl_pipeline
 
-    print("[cloth-exec] shoulder-supported concept garment", flush=True)
+    # The legacy pipeline only emits the measured left sleeve.  Add its
+    # geometric and skinning mirror at the export boundary after the tunic
+    # has already received a matching right armhole/shoulder cap.
+    OriginalWriteGLB = owl_pipeline.write_rigged_glb
+
+    def ExecWriteGLB(primitives, joints, animations, *args, **kwargs):
+        prims = B.mirror_left_sleeve(primitives, joints)
+        return OriginalWriteGLB(prims, joints, animations, *args, **kwargs)
+
+    owl_pipeline.write_rigged_glb = ExecWriteGLB
+
+    print("[cloth-exec] shoulder-supported bilateral concept garment", flush=True)
     return owl_pipeline.main(argv)
 
 
