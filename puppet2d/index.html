@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>AI-CCORE Owl — 2D Puppet Rig</title>
+  <link rel="stylesheet" href="./style.css"/>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="title">
+        <h1>AI-CCORE Owl — 2D Puppet</h1>
+        <p>Layered SVG model, hierarchical rig, deterministic animation clips. No cloth simulation.</p>
+      </div>
+      <div class="status" data-readout>loading…</div>
+    </header>
+
+    <section class="stage-shell" id="stage-shell">
+      <div id="stage" class="stage" aria-live="polite"></div>
+    </section>
+
+    <nav class="controls" aria-label="Animation controls">
+      <div class="clip-buttons">
+        <button data-clip="idle" class="active">Idle <span class="kbd">1</span></button>
+        <button data-clip="wave">Wave <span class="kbd">2</span></button>
+        <button data-clip="talk">Talk <span class="kbd">3</span></button>
+        <button data-clip="celebrate">Celebrate <span class="kbd">4</span></button>
+      </div>
+      <div class="utility-buttons">
+        <button data-action="pause">Pause</button>
+        <button data-action="debug" aria-pressed="false">Rig Debug <span class="kbd">D</span></button>
+      </div>
+    </nav>
+
+    <section class="notes">
+      <article class="card">
+        <strong>Garment attachment</strong>
+        <p>The front/back garment panels inherit the torso transform directly. The patterned cuffs inherit the wing pivots, so the owl can never move “under” a separate clothing shell.</p>
+      </article>
+      <article class="card">
+        <strong>Animation</strong>
+        <p>Idle, wave, speech and celebration are authored as bounded keyframe clips. Blinks, eye direction and beak opening are separate facial channels.</p>
+      </article>
+      <article class="card">
+        <strong>2D-first</strong>
+        <p>The design is intentionally a layered puppet: body, garment, wings, head, eyes, brows, beak, legs and tail. No 3D collision, drape or hidden cloth state remains.</p>
+      </article>
+    </section>
+  </main>
+  <script type="module" src="./puppet.mjs"></script>
+</body>
+</html>
