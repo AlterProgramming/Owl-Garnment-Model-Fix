@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 820" role="img" aria-label="Rigged 2D AI-CCORE owl mascot">
+  <defs>
+    <linearGradient id="redBody" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#f05136"/><stop offset="0.55" stop-color="#d73728"/><stop offset="1" stop-color="#9d211c"/>
+    </linearGradient>
+    <linearGradient id="redWing" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#ee4a34"/><stop offset="0.65" stop-color="#c72e26"/><stop offset="1" stop-color="#8f1d1c"/>
+    </linearGradient>
+    <linearGradient id="cream" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#fff9ec"/><stop offset="1" stop-color="#ead9be"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#ffcc45"/><stop offset="0.6" stop-color="#f39819"/><stop offset="1" stop-color="#c7640d"/>
+    </linearGradient>
+    <pattern id="kente" width="66" height="58" patternUnits="userSpaceOnUse">
+      <rect width="66" height="58" fill="#e8a623"/>
+      <rect width="20" height="58" fill="#0b7d45"/>
+      <rect x="24" width="12" height="58" fill="#171717"/>
+      <rect x="40" width="26" height="58" fill="#c93028"/>
+      <rect y="21" width="66" height="10" fill="#f4c43e"/>
+      <rect y="34" width="66" height="6" fill="#141414"/>
+      <path d="M3 3h14v14H3zM43 41h18v12H43z" fill="#f5c13b"/>
+      <path d="M45 2l10 8-10 8-10-8zM8 43l8 6-8 6-8-6z" fill="#0d6d3f"/>
+      <path d="M25 5l6 6-6 6-6-6z" fill="#d53a2d"/>
+    </pattern>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#31140d" flood-opacity=".24"/>
+    </filter>
+    <filter id="smallShadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#31140d" flood-opacity=".2"/>
+    </filter>
+  </defs>
+
+  <!-- All art is authored around local (0,0) pivots. puppet.mjs supplies world matrices. -->
+  <g id="part-tail" data-part="tail" filter="url(#smallShadow)">
+    <path d="M-78,-12 C-82,33 -68,94 -38,133 C-25,101 -19,61 -24,6 Z" fill="url(#redWing)" stroke="#7d211d" stroke-width="4"/>
+    <path d="M-37,-18 C-42,37 -31,109 -6,146 C10,107 12,53 4,-15 Z" fill="url(#redWing)" stroke="#7d211d" stroke-width="4"/>
+    <path d="M0,-18 C-7,39 1,116 25,150 C45,106 47,47 37,-13 Z" fill="url(#redWing)" stroke="#7d211d" stroke-width="4"/>
+    <path d="M39,-10 C30,47 42,103 66,132 C84,92 86,38 77,-6 Z" fill="url(#redWing)" stroke="#7d211d" stroke-width="4"/>
+    <path d="M-59,21 Q-35,35 -22,67M-20,20 Q4,42 6,77M21,18 Q48,43 55,75" fill="none" stroke="#a72822" stroke-width="4" stroke-linecap="round" opacity=".65"/>
+  </g>
+
+  <g id="part-leg-l" data-part="leg-l" filter="url(#smallShadow)">
+    <path d="M-17,-15 C-20,17 -18,43 -7,61 C-34,62 -51,74 -52,91 C-38,87 -26,88 -15,94 C-30,100 -34,111 -33,122 C-18,112 -7,108 3,111 C4,122 12,130 20,133 C23,118 20,105 14,95 C25,94 36,99 46,108 C48,93 40,78 21,69 C25,44 24,14 17,-15 Z" fill="url(#gold)" stroke="#8d4b0a" stroke-width="4"/>
+  </g>
+  <g id="part-leg-r" data-part="leg-r" filter="url(#smallShadow)">
+    <path d="M-17,-15 C-20,17 -18,43 -7,61 C-34,62 -51,74 -52,91 C-38,87 -26,88 -15,94 C-30,100 -34,111 -33,122 C-18,112 -7,108 3,111 C4,122 12,130 20,133 C23,118 20,105 14,95 C25,94 36,99 46,108 C48,93 40,78 21,69 C25,44 24,14 17,-15 Z" fill="url(#gold)" stroke="#8d4b0a" stroke-width="4"/>
+  </g>
+
+  <g id="part-body" data-part="body" filter="url(#softShadow)">
+    <path d="M0,-129 C-104,-132 -158,-62 -153,45 C-149,137 -88,188 0,188 C88,188 149,137 153,45 C158,-62 104,-132 0,-129 Z" fill="url(#redBody)" stroke="#85241f" stroke-width="6"/>
+    <path d="M0,-91 C-77,-90 -113,-32 -105,68 C-99,140 -62,166 0,166 C62,166 99,140 105,68 C113,-32 77,-90 0,-91 Z" fill="url(#cream)" stroke="#d7c6aa" stroke-width="4"/>
+    <path d="M-66,105 Q0,139 66,105" fill="none" stroke="#d3bfa2" stroke-width="4" opacity=".55"/>
+  </g>
+
+  <g id="part-garment-back" data-part="garment-back">
+    <path d="M-139,-101 C-97,-122 -48,-130 0,-130 C48,-130 97,-122 139,-101 L126,30 C79,44 43,49 0,49 C-43,49 -79,44 -126,30 Z" fill="#7d1f1c" opacity=".48"/>
+  </g>
+
+  <g id="part-garment-front" data-part="garment-front" filter="url(#smallShadow)">
+    <path d="M-139,-100 C-93,-114 -44,-118 0,-118 C44,-118 93,-114 139,-100 L126,53 C77,67 39,72 0,72 C-39,72 -77,67 -126,53 Z" fill="url(#kente)" stroke="#6d241c" stroke-width="6"/>
+    <path d="M-132,-84 Q0,-59 132,-84" fill="none" stroke="#f3bd34" stroke-width="8" opacity=".9"/>
+    <path d="M-126,45 Q0,61 126,45" fill="none" stroke="#171717" stroke-width="6" opacity=".82"/>
+    <path d="M-122,51 Q0,66 122,51" fill="none" stroke="#f4c13a" stroke-width="4"/>
+  </g>
+
+  <g id="part-wing-l" data-part="wing-l" filter="url(#smallShadow)">
+    <path d="M0,0 C-35,5 -70,32 -88,69 C-108,110 -105,154 -84,182 C-76,157 -64,139 -50,124 C-60,161 -53,193 -31,214 C-22,181 -12,157 1,139 C-4,174 8,201 31,217 C36,180 40,150 42,122 C55,145 66,160 80,170 C88,122 72,61 36,20 C25,8 12,1 0,0 Z" fill="url(#redWing)" stroke="#7d211d" stroke-width="6"/>
+    <path d="M-61,70 Q-30,84 -4,119M-55,108 Q-21,123 2,158M-40,147 Q-9,159 14,190M8,55 Q34,78 44,116" fill="none" stroke="#a62722" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+  </g>
+  <g id="part-wing-r" data-part="wing-r" filter="url(#smallShadow)">
+    <g transform="scale(-1 1)">
+      <path d="M0,0 C-35,5 -70,32 -88,69 C-108,110 -105,154 -84,182 C-76,157 -64,139 -50,124 C-60,161 -53,193 -31,214 C-22,181 -12,157 1,139 C-4,174 8,201 31,217 C36,180 40,150 42,122 C55,145 66,160 80,170 C88,122 72,61 36,20 C25,8 12,1 0,0 Z" fill="url(#redWing)" stroke="#7d211d" stroke-width="6"/>
+      <path d="M-61,70 Q-30,84 -4,119M-55,108 Q-21,123 2,158M-40,147 Q-9,159 14,190M8,55 Q34,78 44,116" fill="none" stroke="#a62722" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+    </g>
+  </g>
+
+  <g id="part-cuff-l" data-part="cuff-l">
+    <path d="M-44,-8 Q-8,-22 25,-2 L35,30 Q-2,15 -38,29 Z" fill="url(#kente)" stroke="#6f241c" stroke-width="5"/>
+    <path d="M-39,22 Q-1,9 32,24" fill="none" stroke="#f3bc34" stroke-width="5"/>
+  </g>
+  <g id="part-cuff-r" data-part="cuff-r">
+    <g transform="scale(-1 1)">
+      <path d="M-44,-8 Q-8,-22 25,-2 L35,30 Q-2,15 -38,29 Z" fill="url(#kente)" stroke="#6f241c" stroke-width="5"/>
+      <path d="M-39,22 Q-1,9 32,24" fill="none" stroke="#f3bc34" stroke-width="5"/>
+    </g>
+  </g>
+
+  <g id="part-head" data-part="head" filter="url(#softShadow)">
+    <path d="M-149,-86 C-167,-107 -176,-132 -163,-154 C-140,-138 -124,-126 -103,-113 C-79,-145 -42,-160 0,-160 C42,-160 79,-145 103,-113 C124,-126 140,-138 163,-154 C176,-132 167,-107 149,-86 C164,-54 170,-14 163,29 C151,105 88,145 0,145 C-88,145 -151,105 -163,29 C-170,-14 -164,-54 -149,-86 Z" fill="url(#redBody)" stroke="#81221d" stroke-width="7"/>
+    <path d="M-118,-37 C-112,-93 -77,-122 -34,-112 C-10,-106 0,-89 0,-65 C0,-89 10,-106 34,-112 C77,-122 112,-93 118,-37 C125,27 84,92 0,103 C-84,92 -125,27 -118,-37 Z" fill="url(#cream)" stroke="#dfcfb6" stroke-width="4"/>
+    <path d="M-143,-91 Q-122,-97 -101,-112M143,-91 Q122,-97 101,-112" fill="none" stroke="#ff7050" stroke-width="6" stroke-linecap="round" opacity=".65"/>
+  </g>
+
+  <g id="part-eye-l" data-part="eye-l" filter="url(#smallShadow)">
+    <ellipse rx="50" ry="57" fill="#fffdf8" stroke="#492a1d" stroke-width="5"/>
+    <ellipse id="pupil-l" cx="0" cy="4" rx="22" ry="28" fill="#4a2718"/>
+    <ellipse cx="0" cy="7" rx="11" ry="17" fill="#100c0a"/>
+    <ellipse cx="-7" cy="-6" rx="7" ry="10" fill="#fff" opacity=".96"/>
+    <ellipse cx="9" cy="10" rx="3" ry="4" fill="#fff" opacity=".78"/>
+  </g>
+  <g id="part-eye-r" data-part="eye-r" filter="url(#smallShadow)">
+    <ellipse rx="50" ry="57" fill="#fffdf8" stroke="#492a1d" stroke-width="5"/>
+    <ellipse id="pupil-r" cx="0" cy="4" rx="22" ry="28" fill="#4a2718"/>
+    <ellipse cx="0" cy="7" rx="11" ry="17" fill="#100c0a"/>
+    <ellipse cx="-7" cy="-6" rx="7" ry="10" fill="#fff" opacity=".96"/>
+    <ellipse cx="9" cy="10" rx="3" ry="4" fill="#fff" opacity=".78"/>
+  </g>
+
+  <g id="part-brow-l" data-part="brow-l">
+    <path d="M-31,3 Q0,-17 31,3" fill="none" stroke="#3d241b" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <g id="part-brow-r" data-part="brow-r">
+    <path d="M-31,3 Q0,-17 31,3" fill="none" stroke="#3d241b" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <g id="part-beak" data-part="beak" filter="url(#smallShadow)">
+    <path d="M-42,-10 Q0,-44 42,-10 Q18,12 0,17 Q-18,12 -42,-10 Z" fill="url(#gold)" stroke="#9a5007" stroke-width="4"/>
+    <ellipse id="mouth-cavity" cx="0" cy="20" rx="30" ry="19" fill="#4b1716" opacity="0"/>
+    <g id="beak-lower">
+      <path d="M-30,15 Q0,46 30,15 Q16,48 0,55 Q-16,48 -30,15 Z" fill="#f19216" stroke="#9a5007" stroke-width="4"/>
+      <path d="M-16,29 Q0,40 16,29" fill="none" stroke="#d54835" stroke-width="5" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <g id="part-collar" data-part="collar" filter="url(#smallShadow)">
+    <path d="M-132,-10 Q0,31 132,-10 L115,48 Q0,76 -115,48 Z" fill="#c9312b" stroke="#7e221e" stroke-width="6"/>
+    <path d="M-119,39 Q0,65 119,39" fill="none" stroke="#f4b52f" stroke-width="5" opacity=".85"/>
+    <text x="0" y="38" text-anchor="middle" fill="#fff9ed" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800" letter-spacing="1">AI-CCORE</text>
+  </g>
+
+  <g id="debug-layer" pointer-events="none" opacity="0"></g>
+</svg>
