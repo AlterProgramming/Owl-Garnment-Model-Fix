@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install test dependencies
-        run: python -m pip install --upgrade pip pytest numpy scipy trimesh pygltflib pillow
+        run: python -m pip install --upgrade pip pytest numpy scipy trimesh pygltflib pillow fast-simplification
       - name: Run coupling regression tests
         run: PYTHONPATH="$PWD" python -m pytest tests/test_coupling_experiment.py -q
       - name: Compile experiment entry points
@@ -37,7 +37,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install build dependencies
-        run: python -m pip install --upgrade pip numpy scipy trimesh pygltflib pillow xatlas
+        run: python -m pip install --upgrade pip numpy scipy trimesh pygltflib pillow xatlas fast-simplification
       - name: Build coupled kiosk guide
         run: |
           PYTHONPATH="$PWD" python -m meshforge.owl_pipeline_coupled \
