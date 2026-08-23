@@ -15,7 +15,6 @@ def symmetric_opening_mask(mask: np.ndarray, theta_cols: np.ndarray | None) -> n
     if len(th) != out.shape[1] or n <= 0:
         return out
     base = th[:n]
-    # reflection x -> -x maps atan2(x,z) theta -> -theta.
     target = ((-base + np.pi) % (2.0 * np.pi)) - np.pi
     d = np.abs(((base[None, :] - target[:, None] + np.pi) % (2.0 * np.pi)) - np.pi)
     mirror = np.argmin(d, axis=1)
@@ -31,6 +30,10 @@ def _centre_x(joints) -> float:
     if vals:
         return float(np.mean(vals))
     return 0.0
+
+
+def _joint_map(joints):
+    return {j.name: j for j in joints}
 
 
 def _joint_remap(joints) -> np.ndarray:
@@ -63,13 +66,30 @@ def _collapse_top4(joints: np.ndarray, weights: np.ndarray) -> tuple[np.ndarray,
     return J, W
 
 
-def mirror_left_sleeve(primitives, joints):
-    """Append a right sleeve when the pipeline produced only the left one.
+def _mirror_point(p: np.ndarray, x0: float) -> np.ndarray:
+    q = np.asarray(p, dtype=np.float64).copy()
+    q[0] = 2.0 * x0 - q[0]
+    return q
 
-    Geometry, skin support and material are mirrored as a unit.  The tunic
-    opening itself is made bilateral separately, so this is not an overlay
-    on top of an uncut body panel.
-    """
+
+def _right_shoulder_registration(joints, x0: float) -> np.ndarray:
+    by_name = _joint_map(joints)
+    left = by_name.get("wing_left")
+    right = by_name.get("wing_right")
+    if left is None or right is None:
+        return np.zeros(3, dtype=np.float64)
+    reflected_left = _mirror_point(np.asarray(left.pivot, dtype=np.float64), x0)
+    delta = np.asarray(right.pivot, dtype=np.float64) - reflected_left
+    # Preserve the concept's bilateral silhouette while accepting small rig
+    # asymmetries at the actual shoulder socket.  Large offsets would mean
+    # the labels are not mirror counterparts and should not drag the sleeve.
+    if np.linalg.norm(delta) > 0.18:
+        return np.zeros(3, dtype=np.float64)
+    return delta
+
+
+def mirror_left_sleeve(primitives, joints):
+    """Append a right sleeve, registered to the real right shoulder joint."""
     if any(p.name == "kente_sleeve_right" for p in primitives):
         return list(primitives)
     src = next((p for p in primitives if p.name == "kente_sleeve"), None)
@@ -79,6 +99,8 @@ def mirror_left_sleeve(primitives, joints):
     x0 = _centre_x(joints)
     V = np.asarray(src.vertices, dtype=np.float64).copy()
     V[:, 0] = 2.0 * x0 - V[:, 0]
+    V += _right_shoulder_registration(joints, x0)[None, :]
+
     N = np.asarray(src.normals, dtype=np.float64).copy()
     N[:, 0] *= -1.0
     F = np.asarray(src.faces, dtype=np.int64)[:, [0, 2, 1]].copy()
