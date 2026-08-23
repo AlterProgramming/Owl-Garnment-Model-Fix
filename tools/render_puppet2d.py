@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
-"""Render deterministic evidence frames from the browser 2D puppet.
+"""Render deterministic evidence from the browser 2D puppet.
 
-This intentionally captures the actual runtime, not concept art. The same SVG,
-rig solver and animation clips shipped by puppet2d/index.html are evaluated in
-Chromium, then sampled at fixed clip times.
+These are actual runtime captures, not concept renders. Chromium evaluates the
+same SVG, rig solver and animation clips shipped by puppet2d/index.html.
 """
 from __future__ import annotations
 
 import argparse
-import contextlib
 import http.server
 import socketserver
 import threading
+from io import BytesIO
 from pathlib import Path
 
-from PIL import Image, ImageOps, ImageDraw
+from PIL import Image, ImageDraw
 from playwright.sync_api import sync_playwright
 
 
@@ -49,11 +48,13 @@ def main() -> int:
                     ("idle", 1.00, "idle.png"),
                     ("wave", 1.16, "wave.png"),
                     ("talk", 0.93, "talk.png"),
-                    ("celebrate", 0.80, "celebrate.png"),
+                    ("celebrate", 1.20, "celebrate.png"),
                 ]
                 for clip, t, name in frames:
                     page.evaluate("([clip,t]) => { window.owlPuppet.setClip(clip); window.owlPuppet.pause(); window.owlPuppet.seek(t); }", [clip, t])
                     page.locator("#stage-shell").screenshot(path=str(out / name))
+
+                render_gif(page, out / "wave_preview.gif", "wave", 2.8, fps=15)
 
                 page.evaluate("() => { window.owlPuppet.setClip('wave'); window.owlPuppet.pause(); window.owlPuppet.seek(1.16); window.owlPuppet.setDebug(true); }")
                 page.locator("#stage-shell").screenshot(path=str(out / "wave_rig_debug.png"))
@@ -65,7 +66,23 @@ def main() -> int:
             thread.join(timeout=2)
 
     print(out / "contact_sheet.png")
+    print(out / "wave_preview.gif")
     return 0
+
+
+def render_gif(page, target: Path, clip: str, duration: float, fps: int = 15) -> None:
+    frames = []
+    count = max(2, round(duration * fps))
+    locator = page.locator("#stage-shell")
+    for i in range(count):
+        t = duration * i / (count - 1)
+        page.evaluate("([clip,t]) => { window.owlPuppet.setClip(clip); window.owlPuppet.pause(); window.owlPuppet.seek(t); }", [clip, t])
+        data = locator.screenshot(type="png")
+        im = Image.open(BytesIO(data)).convert("RGB")
+        width = 520
+        im = im.resize((width, round(im.height * width / im.width)), Image.Resampling.LANCZOS)
+        frames.append(im)
+    frames[0].save(target, save_all=True, append_images=frames[1:], duration=round(1000 / fps), loop=0, optimize=True)
 
 
 def make_sheet(out: Path, names: list[str]) -> None:
