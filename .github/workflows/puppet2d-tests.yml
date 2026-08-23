@@ -46,5 +46,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: puppet2d-runtime-evidence
-          path: renders/puppet2d/*.png
+          path: |
+            renders/puppet2d/*.png
+            renders/puppet2d/*.gif
           if-no-files-found: error
