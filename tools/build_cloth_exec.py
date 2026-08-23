@@ -31,6 +31,7 @@ def main(argv=None) -> int:
     from meshforge import gates as G
     from meshforge import shoulder_exec as S
     from meshforge import sleeve as SL
+    from meshforge import sleeve_exec as SX
     from meshforge import wrap as W
 
     D.initial_positions = S.initial_positions
@@ -80,6 +81,12 @@ def main(argv=None) -> int:
             return p
 
     SL.SleeveParams = ExecSleeveParams
+    OriginalBuildSleeve = SL.build_sleeve
+
+    def ExecBuildSleeve(*args, **kwargs):
+        return SX.shape_sleeve(OriginalBuildSleeve(*args, **kwargs))
+
+    SL.build_sleeve = ExecBuildSleeve
 
     legal_dynamic_support = {"wing_left", "wing_left_tip", "wing_right"}
     G.FORBIDDEN = tuple(n for n in G.FORBIDDEN if n not in legal_dynamic_support)
