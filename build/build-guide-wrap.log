@@ -1,0 +1,48 @@
+[   0.0s] base mesh: 6985 verts / 13964 faces
+[   2.3s] color sampler: 3000000 samples
+[   2.4s] regions: {'body': 256, 'chest': 271, 'neck': 666, 'head': 2097, 'cap': 362, 'tassel': 151, 'wing_left': 323, 'wing_left_tip': 241, 'wing_right': 1601, 'leg_left': 172, 'leg_right': 386, 'foot_left': 123, 'foot_right': 195, 'tail': 141, 'leg_split_x_fraction': 0.562953513606078}
+[   2.4s] band frame: {'bins_used': 5, 'fallback': True}
+[   2.4s] collar flattened: 430 vertices relaxed
+[   2.4s] band despiked: 259 ridge vertices clamped
+[   2.4s] unwrapped: 11121 split verts
+[   2.4s] baked texture: coverage 0.32
+[   2.5s] collar filled: {'fill_color': [0.6636396050453186, 0.10882982611656189, 0.08736571669578552], 'filled_texels': 1883, 'text_texels': 0, 'piping_texels': 871, 'piping_color': [0.197, 0.1639, 0.1638]}
+[   3.2s] eye left: centre [-0.105  0.355  0.329] iris 0.071 disc 0.102
+[   3.2s] eye right: centre [0.249 0.356 0.33 ] iris 0.069 disc 0.100
+[   3.4s] eyes blanked + graded + gutters dilated
+[   5.4s] weights: {1: 3206, 2: 508, 3: 641, 4: 2630} free=3786
+[   5.5s] collar decal: {'faces': 722, 'aspect': 2.332, 'image': (597, 256), 'h_box_frac': 0.08926, 'band': {'bins_used': 5, 'fallback': True}, 'theta_deg': [-55.9, 53.8], 'v_range': [0.066, 0.938], 'plate': True}
+[   5.5s] tunic neckline from the 120000-face reference collar: {'bins_used': 28, 'degree': 4, 'residual': 0.008343974393909272, 'height': 0.08205347675158856, 'coarse_height': 0.011875234170528437, 'vertices': 1735}
+[  18.9s] kente wrap: support={'theta_k_deg': np.float64(-86.4), 'y_k_frac': 0.425, 'rim_frac_at_knot': 0.455, 'theta_a_deg': 26.2, 'theta_b_deg': 148.8, 'y_a_frac': 0.326, 'y_b_frac': 0.221, 'loop_frac': [np.float64(0.195), np.float64(0.425)], 'root_ring_vertices': 40, 'root_ring_theta_deg': [-166.4, -86.4], 'axis_xz': [-0.0011546926547009728, 0.06983564143706682]} sheet=[44, 81] tail=[27, 12] knot={'faces': 1016, 'vertices': 546, 'strands': 5, 'size': 0.1804, 'arc_length': 0.3024, 'construction': 'cinched_bunch_band_two_ends_three_folds'}
+[  19.3s] wrap clearance at rest: {'min': 0.003031739817746569, 'p05': 0.018405014661125964, 'median': 0.06735204517593978, 'inside_fraction': 0.0, 'inside_count': 0, 'suspect_count': 1}
+[  19.3s] beads (leg_left): {'leg': 'leg_left', 'beads': 14, 'ring_radius': 0.0645, 'bead_radius': 0.0135, 'world_y': -0.7785, 'centre_xz': [-0.0356, -0.102], 'measured_radius': 0.0614, 'radius_overridden': True}
+[  19.3s] beads (leg_right): {'leg': 'leg_right', 'beads': 14, 'ring_radius': 0.0645, 'bead_radius': 0.0135, 'world_y': -0.7763, 'centre_xz': [0.3108, -0.166], 'measured_radius': 0.1789, 'radius_overridden': True}
+[  26.1s] robe clearance through the clips: {'min': 0.00111755585155639, 'p05': 0.02101112437028933, 'median': 0.07126895605442102, 'inside_fraction': 0.014660493827160493, 'inside_count': 57, 'suspect_count': 112, 'time': 0.96, 'clip': 'wave'}
+[  27.1s] gates:
+gate | measure                                                    | value  | threshold                           | verdict
+-----+------------------------------------------------------------+--------+-------------------------------------+--------
+G1   | worn: pinned row drift from its torso support              | 0.0036 | <= 0.010 H                          | PASS   
+G2   | support only: weight on forbidden joints                   | 0      | = 0                                 | PASS   
+G3   | no penetration: cloth vertices inside the body, worst clip | 57     | <= 20                               | FAIL   
+G4   | hem: above the beads and level                             | 0.1437 | >= 0.119 H, sigma <= 0.015 H        | PASS   
+G5   | root covered: ring rays meeting cloth                      | 0.371  | >= 0.90                             | FAIL   
+G6   | tail clear of the waving wing                              | 0      | = 0 inside                          | PASS   
+G7   | stretch: warp/weft l/l0                                    | 1.042  | median in [0.97, 1.05], p90 <= 1.12 | FAIL   
+G8   | collar visible: cloth vertices above the band's rim        | 0      | = 0                                 | PASS   
+5/8 passed; failed: G3, G5, G7
+[  27.3s] wrote out/owl_kente/owl-guide-kente-wrap.glb (1.68 MB)
+[  27.4s] validation passed
+{
+  "out": "out/owl_kente/owl-guide-kente-wrap.glb",
+  "bytes": 1684756,
+  "vertices": 11121,
+  "faces": 13964,
+  "clips": [
+    "idle",
+    "wave",
+    "blink",
+    "nod",
+    "hop",
+    "tablet_show"
+  ]
+}

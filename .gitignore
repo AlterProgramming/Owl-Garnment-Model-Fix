@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.owl_cache/
+diag/
+*.html
